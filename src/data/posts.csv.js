@@ -18,6 +18,7 @@ while (i++ < MAX_REQUESTS) {
       id: d.id,
       topic_id: d.topic_id,
       username: d.username,
+      avatar_template: d.avatar_template,
       created_at: d.created_at,
       incoming_link_count: d.incoming_link_count,
       reads: d.reads,

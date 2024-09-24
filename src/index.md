@@ -10,12 +10,13 @@ The forum, called [Observable Talk](https://talk.observablehq.com), is a place f
 <!-- Load and transform the data -->
 
 ```js
+const url = "https://talk.observablehq.com"
 import * as d3 from "d3-array";
 const posts = await FileAttachment("data/posts.csv").csv({typed: true});
 const categoriesRaw = await FileAttachment("data/categories.csv").csv({typed: true});
 //const topics = d3.rollup(posts, v => ({category_id: v[0].category_id, posts: v, users: new Set(v.map(d => d.username))}), d => d.topic_id)
 const topics = await FileAttachment("data/topics.csv").csv({typed: true});
-const users = new Set(posts.map(d => d.username));
+const users = d3.rollup(posts, v => ({username: v[0].username, avatar_template: v[0].avatar_template}), d=> d.username);
 
 const topicsByCategory = d3.rollup(topics, v => v.length, d => d.category_id);
 const categories = categoriesRaw.map(d => ({...d, topics: topicsByCategory.get(d.id) || 0}));
@@ -33,7 +34,16 @@ const tenTopAcceptedUsers = d3.rollups(posts.filter(d => d.accepted_answer), v =
       username: d[0],
       posts: d[1]
     }));
-    
+  
+const topAcceptedUserPerYear = d3.rollups(posts.filter(d => d.accepted_answer), v => v.length, d => d.created_at.getFullYear(),d => d.username).map( d => {
+  const username = d[1].sort((a, b) => d3.descending(a[1], b[1]))[0][0];
+  const src = url + users.get(username).avatar_template.replace("{size}", "400");
+  return {
+      year: d[0],
+      username,src
+          }});
+
+
 const intervals = {"month": "Month", "year": "Year", "day": "Day", "week": "Week"};
 const interval  = "month"
 const intervalLabel = intervals[interval];
@@ -208,10 +218,7 @@ function topUsersChart(data, {width}) {
     ]
   });
 }
-```
 
-
-```js
 function topAcceptedUsersChart(data, {width}) {
   return Plot.plot({
     title: "Users with most accepted answers",
@@ -227,14 +234,39 @@ function topAcceptedUsersChart(data, {width}) {
     ]
   });
 }
+
+function topAcceptedUserPerYearChart(data, {width}) {
+  return Plot.plot({
+    title: "User with most accepted answers per year",
+    width,
+    height: 300,
+    marginTop: 0,
+    marginLeft: 150,
+    marginRight: 50,
+    x: {grid: false, label: "Year"},
+    y: {grid: false, ticks: false, domain: [0,1]},
+    marks: [
+      Plot.image(data, {x: d => new Date(d.year + '-01-01'), y: 0.5, src: "src", tip: true,
+      r: 40,
+      preserveAspectRatio: "xMidYMin slice",}),
+      Plot.text(data, {x: d => new Date(d.year + '-01-01'), y: 0.25, text: "username", tip: true,}),
+      Plot.ruleY([0])
+    ]
+  });
+}
 ```
 
 <div class="grid grid-cols-2">
   <div class="card">
     ${resize((width) => topUsersChart(tenTopUsers, {width}))}
   </div>
+  <!-- 
   <div class="card">
     ${resize((width) => topAcceptedUsersChart(tenTopAcceptedUsers, {width}))}
+  </div>
+  -->
+  <div class="card">
+    ${resize((width) => topAcceptedUserPerYearChart(topAcceptedUserPerYear, {width}))}
   </div>
 </div>
 
