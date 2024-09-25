@@ -1,6 +1,7 @@
 import { csvFormat } from "d3-dsv";
+import setup from "./setup.json" with { type: "json" };
 
-const url = "https://talk.observablehq.com/categories.json";
+const url = setup.base_url + "/categories.json";
 const response = await fetch(url);
 const json = await response.json();
 const categories = json.category_list.categories.map((d) => ({

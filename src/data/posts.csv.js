@@ -1,12 +1,13 @@
 import { csvFormat } from "d3-dsv";
+import setup from "./setup.json" with { type: "json" };
 
 const postsChunks = [];
-const MAX_REQUESTS = 1000;
+const MAX_REQUESTS = 100;
 let before = undefined;
 let i = 0;
 while (i++ < MAX_REQUESTS) {
   const url =
-    "https://talk.observablehq.com/posts.json" + (before
+    setup.base_url + "/posts.json" + (before
       ? "?" + new URLSearchParams({
           before,
         }).toString()

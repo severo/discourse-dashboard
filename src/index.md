@@ -3,60 +3,100 @@ theme: dashboard
 toc: false
 ---
 
-# Observable Talk Dashboard
-
-The forum, called [Observable Talk](https://talk.observablehq.com), is a place for the Observable community to connect and share.
+# Forum Dashboard
 
 <!-- Load and transform the data -->
 
 ```js
-const url = "https://talk.observablehq.com"
 import * as d3 from "d3-array";
-const posts = await FileAttachment("data/posts.csv").csv({typed: true});
-const categoriesRaw = await FileAttachment("data/categories.csv").csv({typed: true});
-//const topics = d3.rollup(posts, v => ({category_id: v[0].category_id, posts: v, users: new Set(v.map(d => d.username))}), d => d.topic_id)
-const topics = await FileAttachment("data/topics.csv").csv({typed: true});
-const users = d3.rollup(posts, v => ({username: v[0].username, avatar_template: v[0].avatar_template}), d=> d.username);
+const setup = await FileAttachment("data/setup.json").json();
+const url = setup.base_url
+const posts = await FileAttachment("data/posts.csv").csv({ typed: true });
+const categoriesRaw = await FileAttachment("data/categories.csv").csv({
+  typed: true,
+});
+const topics = [...d3.rollup(
+  posts,
+  (v) => ({
+    topic_id: v[0].topic_id,
+    category_id: v[0].category_id,
+    posts: v,
+    users: new Set(v.map((d) => d.username)),
+  }),
+  (d) => d.topic_id
+).values()];
+const users = d3.rollup(
+  posts,
+  (v) => ({ username: v[0].username, avatar_template: v[0].avatar_template }),
+  (d) => d.username
+);
 
-const topicsByCategory = d3.rollup(topics, v => v.length, d => d.category_id);
-const categories = categoriesRaw.map(d => ({...d, topics: topicsByCategory.get(d.id) || 0}));
+const topicsByCategory = d3.rollup(
+  topics,
+  (v) => v.length,
+  (d) => d.category_id
+);
+const categories = categoriesRaw.map((d) => ({
+  ...d,
+  topics: topicsByCategory.get(d.id) || 0,
+}));
 
-const tenTopUsers = d3.rollups(posts, v => v.length, d => d.username).sort(
-      (a, b) => d3.descending(a[1], b[1])
-    ).slice(0, 10).map(d => ({
-      username: d[0],
-      posts: d[1]
-    }));
-    
-const tenTopAcceptedUsers = d3.rollups(posts.filter(d => d.accepted_answer), v => v.length, d => d.username).sort(
-      (a, b) => d3.descending(a[1], b[1])
-    ).slice(0, 10).map(d => ({
-      username: d[0],
-      posts: d[1]
-    }));
-  
-const topAcceptedUserPerYear = d3.rollups(posts.filter(d => d.accepted_answer), v => v.length, d => d.created_at.getFullYear(),d => d.username).map( d => {
-  const username = d[1].sort((a, b) => d3.descending(a[1], b[1]))[0][0];
-  const src = url + users.get(username).avatar_template.replace("{size}", "400");
-  return {
+const tenTopUsers = d3
+  .rollups(
+    posts,
+    (v) => v.length,
+    (d) => d.username
+  )
+  .sort((a, b) => d3.descending(a[1], b[1]))
+  .slice(0, 10)
+  .map((d) => ({
+    username: d[0],
+    posts: d[1],
+  }));
+
+const tenTopAcceptedUsers = d3
+  .rollups(
+    posts.filter((d) => d.accepted_answer),
+    (v) => v.length,
+    (d) => d.username
+  )
+  .sort((a, b) => d3.descending(a[1], b[1]))
+  .slice(0, 10)
+  .map((d) => ({
+    username: d[0],
+    posts: d[1],
+  }));
+
+const topAcceptedUserPerYear = d3
+  .rollups(
+    posts.filter((d) => d.accepted_answer),
+    (v) => v.length,
+    (d) => d.created_at.getFullYear(),
+    (d) => d.username
+  )
+  .map((d) => {
+    const username = d[1].sort((a, b) => d3.descending(a[1], b[1]))[0][0];
+    const src =
+      url + users.get(username).avatar_template.replace("{size}", "400");
+    return {
       year: d[0],
-      username,src
-          }});
+      username,
+      src,
+    };
+  });
 
-
-const intervals = {"month": "Month", "year": "Year", "day": "Day", "week": "Week"};
-const interval  = "month"
+const intervals = { month: "Month", year: "Year", day: "Day", week: "Week" };
+const interval = "month";
 const intervalLabel = intervals[interval];
 
 const color = {
   users: "#e36209",
   posts: "#3b5fc0",
-  accepted: "green"
-}
+  accepted: "green",
+};
 
-const years = d3.extent(posts, d => d.created_at.getFullYear());
+const years = d3.extent(posts, (d) => d.created_at.getFullYear());
 ```
-
 
 ## Trends over time
 
@@ -103,19 +143,30 @@ const years = d3.extent(posts, d => d.created_at.getFullYear());
 
 <!-- Plot of monthly active users -->
 
-
 ```js
-function postsMAU(data, {width} = {}) {
+function postsMAU(data, { width } = {}) {
   return Plot.plot({
     title: `Monthly active users`,
     width,
     height: 300,
-    y: {grid: true, label: `users`},
+    y: { grid: true, label: `users` },
     // color: {...color, legend: true},
     marks: [
-      Plot.lineY(data, Plot.binX({y: "distinct"}, {x: "created_at", y: "username", stroke: color.users, interval: "month", tip: true})),
-      Plot.ruleY([0])
-    ]
+      Plot.lineY(
+        data,
+        Plot.binX(
+          { y: "distinct" },
+          {
+            x: "created_at",
+            y: "username",
+            stroke: color.users,
+            interval: "month",
+            tip: true,
+          }
+        )
+      ),
+      Plot.ruleY([0]),
+    ],
   });
 }
 ```
@@ -123,17 +174,23 @@ function postsMAU(data, {width} = {}) {
 <!-- Plot of posts history -->
 
 ```js
-function postsTimeline(data, {width} = {}) {
+function postsTimeline(data, { width } = {}) {
   return Plot.plot({
     title: `Posts created every ${interval}`,
     width,
     height: 300,
-    y: {grid: true, label: "posts"},
+    y: { grid: true, label: "posts" },
     // color: {...color, legend: true},
     marks: [
-      Plot.lineY(data, Plot.binX({y: "count"}, {x: "created_at", stroke: color.posts, interval, tip: true})),
-      Plot.ruleY([0])
-    ]
+      Plot.lineY(
+        data,
+        Plot.binX(
+          { y: "count" },
+          { x: "created_at", stroke: color.posts, interval, tip: true }
+        )
+      ),
+      Plot.ruleY([0]),
+    ],
   });
 }
 ```
@@ -152,19 +209,25 @@ function postsTimeline(data, {width} = {}) {
 <!-- Plot of topics per category -->
 
 ```js
-function categoriesChart(data, {width}) {
+function categoriesChart(data, { width }) {
   return Plot.plot({
     title: "Most active categories",
     width,
     height: 300,
     marginTop: 0,
     marginLeft: 150,
-    x: {grid: true, label: "Topics"},
-    y: {label: null},
+    x: { grid: true, label: "Topics" },
+    y: { label: null },
     marks: [
-      Plot.barX(data, {x: "topics", y: "name", fill: d=>"#"+d.color, tip: true, sort: {y: "-x"}}),
-      Plot.ruleX([0])
-    ]
+      Plot.barX(data, {
+        x: "topics",
+        y: "name",
+        fill: (d) => "#" + d.color,
+        tip: true,
+        sort: { y: "-x" },
+      }),
+      Plot.ruleX([0]),
+    ],
   });
 }
 ```
@@ -172,19 +235,32 @@ function categoriesChart(data, {width}) {
 <!-- Posts per topic -->
 
 ```js
-function answersPerTopicChart(data, {width}) {
+function answersPerTopicChart(data, { width }) {
   return Plot.plot({
     title: "Answers per topic",
     width,
     height: 300,
     marginTop: 0,
     marginLeft: 150,
-    x: {grid: true, label: "Proportion (%)", percent: true},
-    y: {label: "Answers", reverse: true},
+    x: { grid: true, label: "Proportion (%)", percent: true },
+    y: { label: "Answers", reverse: true },
     marks: [
-      Plot.rectX(data, Plot.binY({x: "proportion"}, {y: {value: d => d.posts_count - 1, thresholds: d3.range(-0.5,10.5)}, fill: d => d.posts_count === 1 ? "#AAA": "#DDD", tip: true})),
-      Plot.ruleX([0])
-    ]
+      Plot.rectX(
+        data,
+        Plot.binY(
+          { x: "proportion" },
+          {
+            y: {
+              value: (d) => d.posts.length - 1,
+              thresholds: d3.range(-0.5, 10.5),
+            },
+            fill: (d) => (d.posts.length === 1 ? "#AAA" : "#DDD"),
+            tip: true,
+          }
+        )
+      ),
+      Plot.ruleX([0]),
+    ],
   });
 }
 ```
@@ -203,39 +279,51 @@ function answersPerTopicChart(data, {width}) {
 <!-- Top users -->
 
 ```js
-function topUsersChart(data, {width}) {
+function topUsersChart(data, { width }) {
   return Plot.plot({
     title: "Top posters",
     width,
     height: 300,
     marginTop: 0,
     marginLeft: 150,
-    x: {grid: true, label: "Posts"},
-    y: {label: null},
+    x: { grid: true, label: "Posts" },
+    y: { label: null },
     marks: [
-      Plot.barX(data, {x: "posts", y: "username", fill: color.posts, tip: true, sort: {y: "-x"}}),
-      Plot.ruleX([0])
-    ]
+      Plot.barX(data, {
+        x: "posts",
+        y: "username",
+        fill: color.posts,
+        tip: true,
+        sort: { y: "-x" },
+      }),
+      Plot.ruleX([0]),
+    ],
   });
 }
 
-function topAcceptedUsersChart(data, {width}) {
+function topAcceptedUsersChart(data, { width }) {
   return Plot.plot({
     title: "Users with most accepted answers",
     width,
     height: 300,
     marginTop: 0,
     marginLeft: 150,
-    x: {grid: true, label: "Posts"},
-    y: {label: null},
+    x: { grid: true, label: "Posts" },
+    y: { label: null },
     marks: [
-      Plot.barX(data, {x: "posts", y: "username", fill: color.accepted, tip: true, sort: {y: "-x"}}),
-      Plot.ruleX([0])
-    ]
+      Plot.barX(data, {
+        x: "posts",
+        y: "username",
+        fill: color.accepted,
+        tip: true,
+        sort: { y: "-x" },
+      }),
+      Plot.ruleX([0]),
+    ],
   });
 }
 
-function topAcceptedUserPerYearChart(data, {width}) {
+function topAcceptedUserPerYearChart(data, { width }) {
   return Plot.plot({
     title: "User with most accepted answers per year",
     width,
@@ -243,15 +331,25 @@ function topAcceptedUserPerYearChart(data, {width}) {
     marginTop: 0,
     marginLeft: 150,
     marginRight: 50,
-    x: {grid: false, label: "Year"},
-    y: {grid: false, ticks: false, domain: [0,1]},
+    x: { grid: false, label: "Year" },
+    y: { grid: false, ticks: false, domain: [0, 1] },
     marks: [
-      Plot.image(data, {x: d => new Date(d.year + '-01-01'), y: 0.5, src: "src", tip: true,
-      r: 40,
-      preserveAspectRatio: "xMidYMin slice",}),
-      Plot.text(data, {x: d => new Date(d.year + '-01-01'), y: 0.25, text: "username", tip: true,}),
-      Plot.ruleY([0])
-    ]
+      Plot.image(data, {
+        x: (d) => new Date(d.year + "-01-01"),
+        y: 0.5,
+        src: "src",
+        tip: true,
+        r: 40,
+        preserveAspectRatio: "xMidYMin slice",
+      }),
+      Plot.text(data, {
+        x: (d) => new Date(d.year + "-01-01"),
+        y: 0.25,
+        text: "username",
+        tip: true,
+      }),
+      Plot.ruleY([0]),
+    ],
   });
 }
 ```
@@ -270,5 +368,4 @@ function topAcceptedUserPerYearChart(data, {width}) {
   </div>
 </div>
 
-
-Data: [Observable Talk](https://talk.observablehq.com) activity from ${d3.min(posts, d => d.created_at).getFullYear()} to ${d3.max(posts, d => d.created_at).getFullYear()} downloaded using the [Discourse API](https://docs.discourse.org/).
+Data: ${url} activity from ${d3.min(posts, d => d.created_at).getFullYear()} to ${d3.max(posts, d => d.created_at).getFullYear()} downloaded using the [Discourse API](https://docs.discourse.org/).
