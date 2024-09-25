@@ -28,6 +28,10 @@ Then visit <http://localhost:3000> to preview the app.
 
 For more, see <https://observablehq.com/framework/getting-started>.
 
+## Deploy
+
+To deploy the app to Observable, see https://observablehq.com/framework/deploying.
+
 ## Project structure
 
 The project looks like this:
