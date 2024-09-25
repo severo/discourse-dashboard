@@ -1,8 +1,9 @@
 import { csvFormat } from "d3-dsv";
 import setup from "./setup.json" with { type: "json" };
+import {fetchAndRetry} from "../components/fetch-and-retry.js";
 
 const postsChunks = [];
-const MAX_REQUESTS = 100;
+const MAX_REQUESTS = 10000;
 let before = undefined;
 let i = 0;
 while (i++ < MAX_REQUESTS) {
@@ -12,7 +13,8 @@ while (i++ < MAX_REQUESTS) {
           before,
         }).toString()
       : "");
-  const response = await fetch(url);
+  const response = await fetchAndRetry(url);
+
   const json = await response.json();
   const newPosts = json.latest_posts
     .map((d) => ({
