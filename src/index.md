@@ -10,21 +10,25 @@ toc: false
 ```js
 import * as d3 from "d3-array";
 const setup = await FileAttachment("data/setup.json").json();
-const url = setup.base_url
+const url = setup.base_url;
 const posts = await FileAttachment("data/posts.csv").csv({ typed: true });
 const categoriesRaw = await FileAttachment("data/categories.csv").csv({
   typed: true,
 });
-const topics = [...d3.rollup(
-  posts,
-  (v) => ({
-    topic_id: v[0].topic_id,
-    category_id: v[0].category_id,
-    posts: v,
-    users: new Set(v.map((d) => d.username)),
-  }),
-  (d) => d.topic_id
-).values()];
+const topics = [
+  ...d3
+    .rollup(
+      posts,
+      (v) => ({
+        topic_id: v[0].topic_id,
+        category_id: v[0].category_id,
+        posts: v,
+        users: new Set(v.map((d) => d.username)),
+      }),
+      (d) => d.topic_id
+    )
+    .values(),
+];
 const users = d3.rollup(
   posts,
   (v) => ({ username: v[0].username, avatar_template: v[0].avatar_template }),
@@ -67,22 +71,27 @@ const tenTopAcceptedUsers = d3
     posts: d[1],
   }));
 
-const topAcceptedUserPerYear = d3
+const NUM_USERS = 3;
+const topAcceptedUsersPerYear = d3
   .rollups(
     posts.filter((d) => d.accepted_answer),
     (v) => v.length,
     (d) => d.created_at.getFullYear(),
     (d) => d.username
   )
-  .map((d) => {
-    const username = d[1].sort((a, b) => d3.descending(a[1], b[1]))[0][0];
-    const src =
-      url + users.get(username).avatar_template.replace("{size}", "400");
-    return {
-      year: d[0],
+  .flatMap(([year, users_stats]) => {
+    const top_usernames = users_stats
+      .sort(([_, posts_count_a], [__, posts_count_b]) =>
+        d3.descending(posts_count_a, posts_count_b)
+      )
+      .slice(0, NUM_USERS)
+      .map(([username]) => username);
+    return top_usernames.map((username, i) => ({
+      rank: i + 1,
+      year,
       username,
-      src,
-    };
+      src: url + users.get(username).avatar_template.replace("{size}", "400"),
+    }));
   });
 
 const intervals = { month: "Month", year: "Year", day: "Day", week: "Week" };
@@ -323,32 +332,35 @@ function topAcceptedUsersChart(data, { width }) {
   });
 }
 
-function topAcceptedUserPerYearChart(data, { width }) {
+function topAcceptedUsersPerYearChart(data, { width }) {
   return Plot.plot({
     title: "User with most accepted answers per year",
     width,
     height: 300,
     marginTop: 0,
-    marginLeft: 150,
+    marginLeft: 50,
     marginRight: 50,
     x: { grid: false, label: "Year" },
-    y: { grid: false, ticks: false, domain: [0, 1] },
+    y: { grid: false, ticks: false, label: null, domain: [4, 0] },
+    color: { domain: [1, 2, 3], range: ["#FFD700", "#C0C0C0", "#CD7F32"] },
     marks: [
       Plot.image(data, {
         x: (d) => new Date(d.year + "-01-01"),
-        y: 0.5,
+        y: "rank",
         src: "src",
         tip: true,
-        r: 40,
+        r: 20,
         preserveAspectRatio: "xMidYMin slice",
+        title: (d) => `${d.username} - rank ${d.rank} (${d.year})`,
       }),
-      Plot.text(data, {
+      Plot.dot(data, {
         x: (d) => new Date(d.year + "-01-01"),
-        y: 0.25,
-        text: "username",
-        tip: true,
+        y: "rank",
+        r: 20,
+        stroke: "rank",
+        strokeWidth: 2,
       }),
-      Plot.ruleY([0]),
+      Plot.ruleY([4]),
     ],
   });
 }
@@ -364,7 +376,7 @@ function topAcceptedUserPerYearChart(data, { width }) {
   </div>
   -->
   <div class="card">
-    ${resize((width) => topAcceptedUserPerYearChart(topAcceptedUserPerYear, {width}))}
+    ${resize((width) => topAcceptedUsersPerYearChart(topAcceptedUsersPerYear, {width}))}
   </div>
 </div>
 
