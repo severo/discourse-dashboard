@@ -4,7 +4,7 @@ const sleep = async (delay) =>
 export const fetchAndRetry = async (
   url,
   options,
-  { fetchAfterMs = 200, retriesAfterMs = [200, 5 * 1000, 60 * 1000] } = {}
+  { fetchAfterMs = 10, retriesAfterMs = [200, 5 * 1000, 60 * 1000] } = {}
 ) => {
   let error;
   for (let retryAfterMs of retriesAfterMs) {
@@ -12,7 +12,7 @@ export const fetchAndRetry = async (
       await sleep(fetchAfterMs);
       const response = await fetch(url, options);
       if (!response.ok) {
-        console.log(
+        console.warn(
           `Failed to fetch ${url}: ${response.status} ${
             response.statusText
           } - Headers: ${JSON.stringify(response.headers)}`
