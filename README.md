@@ -1,6 +1,6 @@
 # Discourse Forum Dashboard
 
-Dashboard of a Discourse forum.
+Dashboard of a [Discourse forum](https://discourse.org/).
 
 ![screenshot of the app](./src/screenshot1.png)
 
