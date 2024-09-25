@@ -6,7 +6,14 @@ Dashboard of a [Discourse forum](https://discourse.org/).
 
 ![another screenshot of the app](./src/screenshot2.png)
 
-This example gets the data from the Observable HQ forum (https://talk.observablehq.com), but you can switch to any other Discourse-based forum by changing the URL in [src/setup.json](./src/setup.json).
+This example gets the data from the Observable HQ forum (https://talk.observablehq.com), but you can switch to any other Discourse-based forum by setting the `BASE_URL` environment variable. For example, to create a dashboard for the [Hugging Face forum](https://discuss.huggingface.co), run:
+
+```bash
+npm run clean # clear the cache
+BASE_URL=https://discuss.huggingface.co npm run dev
+```
+
+
 
 ## Launch
 

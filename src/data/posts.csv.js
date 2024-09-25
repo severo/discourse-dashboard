@@ -1,6 +1,8 @@
 import { csvFormat } from "d3-dsv";
-import setup from "./setup.json" with { type: "json" };
+import { DEFAULT_BASE_URL } from "../components/constants.js";
 import {fetchAndRetry} from "../components/fetch-and-retry.js";
+
+const base_url = process.env.BASE_URL || DEFAULT_BASE_URL;
 
 const postsChunks = [];
 const MAX_REQUESTS = 10000;
@@ -8,7 +10,7 @@ let before = undefined;
 let i = 0;
 while (i++ < MAX_REQUESTS) {
   const url =
-    setup.base_url + "/posts.json" + (before
+    base_url + "/posts.json" + (before
       ? "?" + new URLSearchParams({
           before,
         }).toString()

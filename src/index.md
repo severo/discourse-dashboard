@@ -10,8 +10,8 @@ toc: false
 
 ```js
 import * as d3 from "d3-array";
-const setup = await FileAttachment("data/setup.json").json();
-const url = setup.base_url;
+const config = await FileAttachment("data/config.json").json();
+const url = config.base_url;
 const posts = await FileAttachment("data/posts.csv").csv({ typed: true });
 const categoriesRaw = await FileAttachment("data/categories.csv").csv({
   typed: true,
