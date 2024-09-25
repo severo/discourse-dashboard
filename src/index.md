@@ -383,4 +383,9 @@ function topAcceptedUsersPerYearChart(data, { width }) {
   </div>
 </div>
 
-Data: activity on [${url}](${url}) from ${d3.min(posts, d => d.created_at).getFullYear()} to ${d3.max(posts, d => d.created_at).getFullYear()} downloaded using the [Discourse API](https://docs.discourse.org/).
+
+## Data and code
+
+The data of [${url}](${url}) from ${d3.min(posts, d => d.created_at).getFullYear()} to ${d3.max(posts, d => d.created_at).getFullYear()} was downloaded using the [Discourse API](https://docs.discourse.org/).
+
+The code is available on [GitHub](https://github.com/severo/discourse-dashboard).
