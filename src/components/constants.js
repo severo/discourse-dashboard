@@ -1,1 +1,1 @@
-export const DEFAULT_BASE_URL = "https://talk.observablehq.com";
+export const DEFAULT_DISCOURSE_URL = "https://talk.observablehq.com";

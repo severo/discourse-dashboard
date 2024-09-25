@@ -6,11 +6,11 @@ Dashboard of a [Discourse forum](https://discourse.org/).
 
 ![another screenshot of the app](./src/screenshot2.png)
 
-This example gets the data from the Observable HQ forum (https://talk.observablehq.com), but you can switch to any other Discourse-based forum by setting the `BASE_URL` environment variable. For example, to create a dashboard for the [Hugging Face forum](https://discuss.huggingface.co), run:
+This example gets the data from the Observable HQ forum (https://talk.observablehq.com), but you can switch to any other Discourse-based forum by setting the `DISCOURSE_URL` environment variable. For example, to create a dashboard for the [Hugging Face forum](https://discuss.huggingface.co), run:
 
 ```bash
 npm run clean # clear the cache
-BASE_URL=https://discuss.huggingface.co npm run dev
+DISCOURSE_URL=https://discuss.huggingface.co npm run dev
 ```
 
 
@@ -37,7 +37,9 @@ For more, see <https://observablehq.com/framework/getting-started>.
 
 ## Deploy
 
-To deploy the app to Observable, see https://observablehq.com/framework/deploying.
+To deploy the app to Observable, see https://observablehq.com/framework/deploying. See https://severo.observablehq.cloud/observable-forum-dashboard/ for an example.
+
+To deploy the app to an Hugging Face space, have a look at https://huggingface.co/blog/severo/build-static-html-spaces, and the deployed example: https://huggingface.co/spaces/severo/hf-forum-dashboard (the "code space" is https://huggingface.co/spaces/severo/build-hf-forum-dashboard).
 
 ## Project structure
 
