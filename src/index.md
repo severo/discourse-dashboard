@@ -5,6 +5,7 @@ toc: false
 
 # Forum Dashboard
 
+
 <!-- Load and transform the data -->
 
 ```js
@@ -106,6 +107,8 @@ const color = {
 
 const years = d3.extent(posts, (d) => d.created_at.getFullYear());
 ```
+
+Statistics for the [${url}](${url}) forum.
 
 ## Trends over time
 
@@ -380,4 +383,4 @@ function topAcceptedUsersPerYearChart(data, { width }) {
   </div>
 </div>
 
-Data: ${url} activity from ${d3.min(posts, d => d.created_at).getFullYear()} to ${d3.max(posts, d => d.created_at).getFullYear()} downloaded using the [Discourse API](https://docs.discourse.org/).
+Data: activity on [${url}](${url}) from ${d3.min(posts, d => d.created_at).getFullYear()} to ${d3.max(posts, d => d.created_at).getFullYear()} downloaded using the [Discourse API](https://docs.discourse.org/).
